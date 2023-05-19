@@ -567,6 +567,9 @@ export default {
             data: payload.elevations,
             fill: true,
             borderWidth: 15,
+            pointRadius: 0,
+            pointHoverRadius: 10,
+            pointHoverBackgroundColor: 'green',
             tension: 0.2
           }
         ]

@@ -83,13 +83,16 @@
 
               </div>
             </div>
-        <q-card  v-if="info.distance" horizontal="true" class="flex">
-          <q-card-section style="flex-grow: 1">
+        <q-card  v-if="info.distance" horizontal="true" class="flex column">
+          <div id="tooltip-header"></div>
+          <q-card-section class="graph-wrapper">
             <line-chart
+              height="250"
               @overGraphic="overGraphic"
               @outGraphic="outGraphic"
             ></line-chart>
           </q-card-section>
+          <div id="tooltip-footer"></div>
         </q-card>
     </div>
   </template>
@@ -129,6 +132,10 @@ export default defineComponent({
 
     const outGraphic = (data) => {
       context.emit('out-graphic', data)
+      document.getElementById('tooltip-footer').innerHTML = ''
+      document.getElementById('tooltip-header').innerHTML = ''
+      document.getElementById('tooltip-header').style.padding = 0
+      document.getElementById('tooltip-footer').style.padding = 0
     }
 
     const cancelTrackProfile = () => {
@@ -184,6 +191,14 @@ export default defineComponent({
   -webkit-transform: scaleX(-1);
   transform: scaleX(-1);
 }
+#tooltip-header,
+#tooltip-footer{
+  padding: 4px;
+  width: fit-content;
+  color: white;
+  background: red;
+  border-radius: 5px;
+}
 .graph-header{
   background: #dadada;
   padding: 10px;
@@ -193,6 +208,10 @@ export default defineComponent({
 }
 .vertical-line{
   border-left: thick solid $dark-page;
+}
+.graph-wrapper{
+  flex-grow: 1;
+  padding: 0px 15px;
 }
 
 </style>
