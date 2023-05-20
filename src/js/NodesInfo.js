@@ -31,6 +31,7 @@ export class NodesInfo {
     this.trackInfo = undefined
     this.elevations = []
     this.distances = []
+    this.speed = []
 
     this.selectedNodeLayer = new VectorLayer({
       id: 'nodes',
@@ -125,6 +126,7 @@ export class NodesInfo {
     this.active = false
     this.elevations = []
     this.distances = []
+    this.speed = []
   }
 
 
@@ -317,21 +319,25 @@ export class NodesInfo {
 
       response.elevation = { up: up, down: down, maxEle, minEle }
     }
-    this.trackInfo = response
     response.type = 'track-info'
 
     let xDataGraph
     let yDataGraph
+    let speedData
     if (this.startIndex > this.endIndex){
       xDataGraph = this.distances.slice(this.endIndex, _this.startIndex + 1)
       yDataGraph = this.elevations.slice(this.endIndex, _this.startIndex + 1)
+      speedData = this.speed.slice(this.endIndex, _this.startIndex + 1)
     } else {
       xDataGraph = this.distances.slice(this.startIndex, this.endIndex + 1)
       yDataGraph = this.elevations.slice(this.startIndex, this.endIndex + 1)
+      speedData = this.speed.slice(this.startIndex, this.endIndex + 1)
     }
     response.distances = xDataGraph
     response.elevations = yDataGraph
-
+    response.speed = speedData
+    this.trackInfo = response
+    console.log(this.trackInfo)
     this.map.dispatchEvent(response)
   }
 
@@ -339,17 +345,22 @@ export class NodesInfo {
     const _this = this
     const nodesSource = new VectorSource({})
     let dist = 0
+    let speed = 0
     coords.forEach((cur, index) => {
       if (index === 0) {
         dist = 0
+        speed = 0
       } else {
         const prev = coords[index -1]
         var c1 = transform([cur[0], cur[1]], 'EPSG:3857', 'EPSG:4326')
         var c2 = transform([prev[0], prev[1]], 'EPSG:3857', 'EPSG:4326')
-        dist += Math.floor(
+        var incDist = Math.floor(
           // projDistance([prev[0], prev[1]], [cur[0], cur[1]])
           Distance(c1, c2)
         )
+        var incTime = cur[3] - prev[3]
+        var speed = (incDist / incTime) * 3.6 // kms/h
+        dist += incDist
       }
       const ele = Math.floor(cur[2])
       var f = new Feature({
@@ -357,10 +368,12 @@ export class NodesInfo {
         id: index,
         d: dist,
         e: ele,
-        t: cur[3]
+        t: cur[3],
+        s: speed
       })
       this.distances.push(dist)
       this.elevations.push(ele)
+      this.speed.push(speed)
       nodesSource.addFeature(f)
     })
     return nodesSource

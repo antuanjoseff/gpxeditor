@@ -38,7 +38,6 @@ export function newOrder ( state, newValue ) {
 }
 
 export function setActiveLayer ( state, index ) {
-    console.log('MUTATION ' + index)
     state.TOCLayers.forEach((e => {
         if (e.id === index) {
           e.active = true
@@ -46,8 +45,6 @@ export function setActiveLayer ( state, index ) {
           e.active = false
         }
     }))
-
-    console.log(state.TOCLayers)
 }
 
 export function changeLayerColor ( state, payload ) {

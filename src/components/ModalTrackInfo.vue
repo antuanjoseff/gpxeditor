@@ -2,67 +2,75 @@
     <div class="q-gutter-sm"  v-if="info.distance">
         <div class="graph-header">
             <div class="flex">
-                <div class="text-bold q-mr-md">
-                  <q-icon class="toc-layer-icon right" name="directions_walk"/>
-                  Distance
-                </div>
-
-                <div class="text-color" v-if="info.distance">
-                  {{ info.distance.kms }} kms {{ info.distance.meters }} m
-                </div>
-
-                <div class="text-weight-bold q-mx-md q-pl-md vertical-line">
-                  <q-icon class="toc-layer-icon right" name="query_builder"/>
-                  Time
-                </div>
-
-                <div class="text-color" v-if="info.time">
-                  {{ info.time.hours }}h  {{ info.time.minutes }}m {{ info.time.seconds }}s
-                </div>
-
-                <div class="text-weight-bold q-mx-md">
-                  <q-icon class="toc-layer-icon right" name="speed"/>
-                  Avg
-                </div>
-
-                <div v-if="info.time">{{ (3.6 * (info.distance.total / info.time.total)).toFixed(2) }} km/h
-                </div>
-
-                <div class="text-weight-bold q-ml-md q-px-md vertical-line">
-                  <q-icon
-                      class="toc-layer-icon right"
-                      name="terrain"
-                    />
-                  Elevation
-                </div>
-                <div v-if="info.elevation" class="flex">
-                  <div class="q-mx-sm">
-                    {{ info.elevation.up }} m
-                    <q-icon class="toc-layer-icon" name="trending_up"/>
+                <!-- DISTANCE -->
+                <div class="flex column">
+                  <div class="text-bold q-mr-md">
+                    <q-icon class="toc-layer-icon right" name="directions_walk"/>
+                    Distance
                   </div>
 
-                  <div class="q-mx-sm">
-                      {{ info.elevation.down }} m
-                      <q-icon class="toc-layer-icon" name="trending_down"/>
+                  <div class="text-color" v-if="info.distance">
+                    {{ info.distance.kms }} kms {{ info.distance.meters }} m
                   </div>
+                </div>
+                <!-- TIME -->
+                <div class="flex column q-mx-md q-pl-md vertical-line">
+                  <div class="text-weight-bold">
+                    <q-icon class="toc-layer-icon right" name="query_builder"/>
+                    Time
+                  </div>
+                  <div class="text-color" v-if="info.time">
+                    {{ info.time.hours }}h  {{ info.time.minutes }}m {{ info.time.seconds }}s
+                  </div>
+                </div>
+                <!-- AVERAGE -->
+                <div class="flex column q-ml-md q-px-md vertical-line">
+                    <div class="text-weight-bold">
+                      <q-icon class="toc-layer-icon right" name="speed"/>
+                      Avg
+                    </div>
 
-                  <div class="q-mx-sm">
-                    {{ info.elevation.maxEle }} m
+                    <div v-if="info.time">{{ (3.6 * (info.distance.total / info.time.total)).toFixed(2) }} km/h
+                    </div>
+                </div>
+                <!-- ELEVATION -->
+                <div class="flex column q-ml-md q-px-md vertical-line vertical-line-right">
+                  <div class="text-weight-bold text-center fit">
                     <q-icon
-                      class="toc-layer-icon"
-                      name="vertical_align_top"
-                    />
+                        class="toc-layer-icon right"
+                        name="terrain"
+                      />
+                    Elevation
                   </div>
+                  <div v-if="info.elevation" class="flex">
+                                              <div class="q-mx-sm">
+                                                {{ info.elevation.up }} m
+                                                <q-icon class="toc-layer-icon" name="trending_up"/>
+                                              </div>
 
-                  <div class="q-mx-sm">
-                      {{ info.elevation.minEle }} m
-                    <q-icon
-                      class="toc-layer-icon"
-                      name="vertical_align_bottom"
-                    />
-                  </div>
+                                              <div class="q-mx-sm">
+                                                  {{ info.elevation.down }} m
+                                                  <q-icon class="toc-layer-icon" name="trending_down"/>
+                                              </div>
+
+                                              <div class="q-mx-sm">
+                                                {{ info.elevation.maxEle }} m
+                                                <q-icon
+                                                  class="toc-layer-icon"
+                                                  name="vertical_align_top"
+                                                />
+                                              </div>
+
+                                              <div class="q-mx-sm">
+                                                  {{ info.elevation.minEle }} m
+                                                <q-icon
+                                                  class="toc-layer-icon"
+                                                  name="vertical_align_bottom"
+                                                />
+                                            </div>
                 </div>
-
+                </div>
+                <!-- CANCEL / CREATE TRACK BUTTONS -->
                 <div style="flex-grow: 1;" class="text-right">
                   <q-btn
                     v-if="activeTool=='info'"
@@ -79,20 +87,19 @@
                     label="Cancel"
                     @click="cancelTrackProfile"
                   />
-              </div>
-
-              </div>
+                </div>
             </div>
+          </div>
         <q-card  v-if="info.distance" horizontal="true" class="flex column">
-          <div id="tooltip-header"></div>
           <q-card-section class="graph-wrapper">
+            <div id="tooltip-header"></div>
             <line-chart
               height="250"
               @overGraphic="overGraphic"
               @outGraphic="outGraphic"
             ></line-chart>
+            <div id="tooltip-footer"></div>
           </q-card-section>
-          <div id="tooltip-footer"></div>
         </q-card>
     </div>
   </template>
@@ -134,8 +141,8 @@ export default defineComponent({
       context.emit('out-graphic', data)
       document.getElementById('tooltip-footer').innerHTML = ''
       document.getElementById('tooltip-header').innerHTML = ''
-      document.getElementById('tooltip-header').style.padding = 0
-      document.getElementById('tooltip-footer').style.padding = 0
+      // document.getElementById('tooltip-header').style.padding = 0
+      // document.getElementById('tooltip-footer').style.padding = 0
     }
 
     const cancelTrackProfile = () => {
@@ -191,17 +198,38 @@ export default defineComponent({
   -webkit-transform: scaleX(-1);
   transform: scaleX(-1);
 }
+
+#tooltip-header:empty
+{
+    padding:0;
+}
+#tooltip-header{
+  bottom: 250px
+}
+#tooltip-footer{
+  bottom: 10px;
+}
+
+
+#tooltip-footer{
+  position: absolute;
+}
+
+#tooltip-header{
+  min-height: 26px;
+}
 #tooltip-header,
 #tooltip-footer{
-  padding: 4px;
+  white-space: nowrap;
+  padding: 2px 6px;
   width: fit-content;
   color: white;
   background: red;
   border-radius: 5px;
+  font-weight: 600;
 }
 .graph-header{
   background: #dadada;
-  padding: 10px;
 }
 .graph-header .flex{
   align-items: baseline;
@@ -209,9 +237,12 @@ export default defineComponent({
 .vertical-line{
   border-left: thick solid $dark-page;
 }
+.vertical-line-right{
+  border-right: thick solid $dark-page;
+}
 .graph-wrapper{
   flex-grow: 1;
-  padding: 0px 15px;
+  padding: 0px 5px;
 }
 
 </style>

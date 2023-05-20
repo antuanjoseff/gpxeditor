@@ -549,7 +549,8 @@ export default {
       const data = {
         distance: payload.distance,
         time: payload.time,
-        elevation: payload.elevation
+        elevation: payload.elevation,
+        speed: payload.speed
       }
       if (payload.data) {
         data.data = payload.data
@@ -561,15 +562,28 @@ export default {
       $store.commit('main/graphData', {
         labels: payload.distances,
         datasets: [
+        {
+            label: 'Speed ',
+            data: payload.speed,
+            fill: false,
+            borderColor: 'rgb(0,0,255,0.4)',
+            borderWidth: '.5',
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: 'black',
+            tension: 0.2,
+            yAxisID: 'speed'
+          },
           {
             label: 'Altitud ',
-            backgroundColor: '#f87979',
+            yAxisID: 'altitud',
+            backgroundColor: 'rgb(255, 50, 50, 0.6)',
             data: payload.elevations,
             fill: true,
             borderWidth: 15,
             pointRadius: 0,
-            pointHoverRadius: 10,
-            pointHoverBackgroundColor: 'green',
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: 'black',
             tension: 0.2
           }
         ]
