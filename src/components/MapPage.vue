@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useStore } from 'vuex'
 import VectorLayer from 'ol/layer/Vector.js';
 import VectorSource from 'ol/source/Vector.js';
@@ -542,10 +542,11 @@ export default {
 
     const activateNodesInfo = () => {
       tools.info.activate()
-      map.value.map.on('track-info', showTrackData)
+      tools.info.callback = showTrackData
+      // map.value.map.on('track-info', showTrackData)
     }
 
-    const showTrackData = function (payload) {
+    const updateGraphData = function (payload) {
       const data = {
         distance: payload.distance,
         time: payload.time,
@@ -556,8 +557,11 @@ export default {
         data.data = payload.data
         data.name = payload.name
       }
-
       $store.commit('main/setTrackInfo', data)
+    }
+
+    const showTrackData = function (payload) {
+      const data = updateGraphData(payload)
       // UPDATE GRAPH DATA
       $store.commit('main/graphData', {
         labels: payload.distances,
@@ -730,12 +734,7 @@ export default {
 
     const drawPointFromGraphic = (index) => {
       window.clearTimeout(debounce);
-      var coord
-      if (tools.info.isActive()) {
-        coord = tools.info.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()[index]
-      } else {
-        coord = tools.info.initCoords[index]
-      }
+      var coord = tools.info.initCoords[index]
       animatedPoint.getSource().getFeatures()[0].getGeometry().setCoordinates(coord)
       var extent = map.value.map.getView().calculateExtent(map.value.map.getSize())
       if (!containsXY(extent, coord[0], coord[1])) {
@@ -753,15 +752,43 @@ export default {
 
     const trackProfile = (layerId) => {
       const layer = findLayer(layerId)
-      map.value.map.once('track-info', showTrackData)
-      tools.info.getInfoFromCoords(getCoords(layer))
+      const coords = getCoords(layer)
+      // map.value.map.once('track-info', showTrackData)
+      tools.info.callback = showTrackData
+      tools.info.getInfoFromCoords(coords)
+      // tools.info.activate()
+      activateNodesInfo()
+      tools.info.initCoords = coords
     }
 
     const clearAnimatedPoint = () => {
       animatedPoint.getSource().getFeatures()[0].getGeometry().setCoordinates([])
     }
 
+    let activeLayerCoords = undefined
+    watch(activeLayerId, ( newValue, oldValue ) => {
+      const l = findLayer(newValue)
+      if (newValue){
+        activeLayerCoords = getCoords(findLayer(newValue))
+      }
+    })
+
+    const dragOnGraph = ( { startIndex, endIndex }) => {
+      let coords
+      if (startIndex <= endIndex) {
+        coords = activeLayerCoords.slice(startIndex, endIndex)
+      } else {
+        coords = activeLayerCoords.slice(endIndex, startIndex)
+      }
+      tools.info.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().setCoordinates(coords)
+      tools.info.startIndex = startIndex
+      tools.info.endIndex = endIndex
+      tools.info.callback = updateGraphData
+      tools.info.sumUp()
+    }
+
     return {
+      dragOnGraph,
       clearAnimatedPoint,
       trackProfile,
       drawPointFromGraphic,

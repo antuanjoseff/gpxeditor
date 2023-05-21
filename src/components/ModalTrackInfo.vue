@@ -97,6 +97,7 @@
               height="250"
               @overGraphic="overGraphic"
               @outGraphic="outGraphic"
+              @dragOnGraph="dragOnGraph"
             ></line-chart>
             <div id="tooltip-footer"></div>
           </q-card-section>
@@ -112,7 +113,7 @@ import LineChart from 'components/LineChart.vue'
 export default defineComponent({
 
   name: 'ModalTrackInfo',
-  emits: ['create-track', 'over-graphic'],
+  emits: ['create-track', 'over-graphic', 'dragOnGraph'],
   components: { LineChart },
   setup(props, context){
     const $store = useStore()
@@ -133,6 +134,10 @@ export default defineComponent({
       $store.commit('main/setTrackInfo', {})
     }
 
+    const dragOnGraph = (data) => {
+      context.emit('dragOnGraph', data)
+    }
+
     const overGraphic = (data) => {
       context.emit('over-graphic', data)
     }
@@ -141,8 +146,6 @@ export default defineComponent({
       context.emit('out-graphic', data)
       document.getElementById('tooltip-footer').innerHTML = ''
       document.getElementById('tooltip-header').innerHTML = ''
-      // document.getElementById('tooltip-header').style.padding = 0
-      // document.getElementById('tooltip-footer').style.padding = 0
     }
 
     const cancelTrackProfile = () => {
@@ -152,6 +155,7 @@ export default defineComponent({
 
     return {
       info,
+      dragOnGraph,
       cancelTrackProfile,
       outGraphic,
       overGraphic,

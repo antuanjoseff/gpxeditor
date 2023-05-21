@@ -29,6 +29,7 @@ export class NodesInfo {
     this.startIndex = undefined
     this.endIndex = undefined
     this.trackInfo = undefined
+    this.callback = undefined
     this.elevations = []
     this.distances = []
     this.speed = []
@@ -109,9 +110,9 @@ export class NodesInfo {
       this.cleanSegment()
 
     }
-        this.map.removeLayer(this.selectedNodeLayer)
+    this.map.removeLayer(this.selectedNodeLayer)
     this.map.removeLayer(this.selectedSegmentLayer)
-        this.initCoords = undefined
+    this.initCoords = undefined
     this.hoverOnActiveLayer = undefined
     this.nodesSource = undefined
     this.throttletime = 50 // miliseconds
@@ -272,10 +273,10 @@ export class NodesInfo {
     var down = 0
     var tolerance = 60 // Seconds
     var elapsed  = 0
-    if (this.active) {
-      var coordsList = this.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()
-    } else {
-      var coordsList = this.initCoords
+
+    var coordsList = this.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()
+    if (!coordsList.length) {
+      coordsList = this.initCoords
     }
 
     // Three dimensions, means there is no time, so tolerance must be zero
@@ -337,8 +338,10 @@ export class NodesInfo {
     response.elevations = yDataGraph
     response.speed = speedData
     this.trackInfo = response
-    console.log(this.trackInfo)
-    this.map.dispatchEvent(response)
+    if (this.callback) {
+      this.callback(response)
+    }
+    // this.map.dispatchEvent(response)
   }
 
   getNodesSource(coords) {

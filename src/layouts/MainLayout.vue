@@ -141,6 +141,7 @@
             @createTrack="createTrack"
             @overGraphic="overGraphic"
             @outGraphic="outGraphic"
+            @dragOnGraph="dragOnGraph"
           />
         </div>
       </div>
@@ -315,8 +316,13 @@ export default defineComponent({
       MAP.value.trackProfile(layerId)
     }
 
+    const dragOnGraph = (payload) => {
+      MAP.value.dragOnGraph(payload)
+    }
+
     return {
       trackProfile,
+      dragOnGraph,
       outGraphic,
       overGraphic,
       downloadFile,

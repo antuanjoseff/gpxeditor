@@ -1,6 +1,8 @@
 <template>
   <div class="fit padding-canvas" v-if="elevationData">
+    <canvas id="overlay" height="250" style="position:absolute;pointer-events:none;"></canvas>
     <line-chart
+      ref="CHART"
       id="profile-chart"
       :data="data"
       :options="options"
@@ -13,7 +15,7 @@
 
 <script>
 import { Line as LineChart } from 'vue-chartjs'
-import { ref, computed, defineComponent } from 'vue'
+import { ref, nextTick, onMounted, computed, defineComponent } from 'vue'
 import { useStore } from 'vuex'
 import { Chart, Tooltip, registerables } from 'chart.js'
 
@@ -26,14 +28,96 @@ export default defineComponent({
     LineChart
   },
   props: ['height'],
-  emits: ['overGraphic', 'outGraphic'],
+  emits: ['overGraphic', 'outGraphic', 'dragOnGraph'],
   setup(props, { emit }) {
     const $store = useStore()
+    const CHART = ref()
+    var startIndex
+    var endIndex
+    onMounted(async () => {
+      await nextTick()
+      var canvas = document.getElementById('profile-chart')
+      var overlay = document.getElementById('overlay')
+      overlay.width = canvas.width
+      overlay.height = canvas.height
+      var selectionContext = overlay.getContext('2d')
+      var selectionRect = {
+        w: 0,
+        startX: 0,
+        startY: 0
+      }
+
+      var drag = false
+      const chart = CHART.value.chart
+
+      canvas.addEventListener('pointerdown', evt => {
+        const points = chart.getElementsAtEventForMode(evt, 'index', {
+          intersect: false
+        })
+        startIndex = points[0].index;
+        const rect = canvas.getBoundingClientRect()
+        selectionRect.startX = evt.clientX - rect.left
+        selectionRect.startY = chart.chartArea.top
+        drag = true
+      })
+
+      var throttle = undefined
+      function doThrottle(evt) {
+        if (throttle) return
+          throttle = true
+          setTimeout(async () => {
+            const rect = canvas.getBoundingClientRect();
+            if (drag) {
+              const points = chart.getElementsAtEventForMode(evt, 'index', {
+                intersect: false
+              })
+              endIndex = points[0].index;
+              const rect = canvas.getBoundingClientRect();
+              selectionRect.w = (evt.clientX - rect.left) - selectionRect.startX;
+              selectionContext.globalAlpha = 0.5;
+              selectionContext.clearRect(0, 0, canvas.width, canvas.height);
+              selectionContext.fillRect(selectionRect.startX,
+                selectionRect.startY,
+                selectionRect.w,
+                chart.chartArea.bottom - chart.chartArea.top
+              )
+              emit('dragOnGraph', { startIndex, endIndex })
+            } else {
+              selectionContext.clearRect(0, 0, canvas.width, canvas.height);
+              var x = evt.clientX - rect.left;
+              if (x > chart.chartArea.left) {
+                selectionContext.fillRect(x,
+                  chart.chartArea.top,
+                  1,
+                  chart.chartArea.bottom - chart.chartArea.top);
+              }
+            }
+            throttle = false
+          }, 50)
+      }
+
+      canvas.addEventListener('pointermove', evt => {
+        doThrottle(evt)
+      })
+
+      canvas.addEventListener('pointerup', evt => {
+        const points = chart.getElementsAtEventForMode(evt, 'index', {
+          intersect: false
+        });
+        drag = false;
+        endIndex = points[0].index;
+       });
+    })
+
+
+    const dataset = computed(() => {
+      return JSON.parse(JSON.stringify($store.getters['main/graphData'].datasets[0]))
+    })
 
     const graphHeight = computed(() => {
       return props.height
     })
-    
+
     const plugins = ref()
     const elevationData = computed(() => {
       if ($store.getters['main/graphData'].labels) {
@@ -50,7 +134,7 @@ export default defineComponent({
     const dataLabels = computed(() => {
       return JSON.parse(JSON.stringify($store.getters['main/graphData'].labels))
     })
-  
+
     var ctx = document.getElementById('profile-chart');
 
     Tooltip.positioners.bottom = function (elements, eventPosition) {
@@ -152,8 +236,10 @@ export default defineComponent({
 
     const doTooltip = (eleData, speedData, chartArea) => {
       let indexValue = 0
-      if (eleData.dataIndex) {
+      if (eleData && eleData.dataIndex) {
         indexValue = eleData.dataIndex
+      } else {
+        return
       }
 
       const total  = parseInt(eleData.label)
@@ -183,6 +269,7 @@ export default defineComponent({
     }
 
     return {
+      CHART,
       data,
       mouseOut,
       plugins,

@@ -148,6 +148,7 @@ export default defineComponent({
     }
 
     const setActiveLayer = (index) => {
+      $store.commit('main/activeLayerId', index)
       $store.commit('main/setActiveLayer', index)
     }
 
