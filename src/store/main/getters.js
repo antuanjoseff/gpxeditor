@@ -34,6 +34,14 @@ export function getTrackInfo ( state ) {
     return state.trackInfo
 }
 
+export function graphSelectedRange (state) {
+    return state.graphSelectedRange
+}
+
 export function graphData (state) {
     return state.graphData
+}
+
+export function segmentIsSelected (state) {
+    return state.segmentIsSelected
 }

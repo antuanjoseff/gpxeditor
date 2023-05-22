@@ -505,8 +505,8 @@ export default {
           break
         case 'info':
           tools.info.deactivate()
-          map.value.map.un('track-info', showTrackData)
-          console.log('deactivate')
+          // map.value.map.un('track-info', showTrackData)
+          // map.value.map.un('unselect-track', unselectSegment)
           $store.commit('main/setTrackInfo', {
             distance:undefined,
             time:undefined,
@@ -542,8 +542,14 @@ export default {
 
     const activateNodesInfo = () => {
       tools.info.activate()
+      $store.commit('main/activeTool', 'info')
       tools.info.callback = showTrackData
-      // map.value.map.on('track-info', showTrackData)
+      map.value.map.on('unselect-track', unselectSegment)
+    }
+
+    const unselectSegment = () => {
+      console.log('unselect segment')
+      $store.commit('main/segmentIsSelected', false)
     }
 
     const updateGraphData = function (payload) {
@@ -558,6 +564,7 @@ export default {
         data.name = payload.name
       }
       $store.commit('main/setTrackInfo', data)
+      $store.commit('main/graphSelectedRange', payload.indexes)
     }
 
     const showTrackData = function (payload) {

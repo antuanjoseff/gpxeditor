@@ -100,7 +100,16 @@ export function setTrackInfo (state, payload) {
     state.trackInfo = payload
 }
 
+export function graphSelectedRange (state, payload) {
+    state.graphSelectedRange = payload
+}
+
 export function graphData ( state, payload ) {
     // console.log(payload)
     state.graphData = payload
+}
+
+export function segmentIsSelected ( state, value ) {
+    // console.log(payload)
+    state.segmentIsSelected = value
 }

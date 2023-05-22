@@ -15,7 +15,7 @@
 
 <script>
 import { Line as LineChart } from 'vue-chartjs'
-import { ref, nextTick, onMounted, computed, defineComponent } from 'vue'
+import { ref, watch, nextTick, onMounted, computed, defineComponent } from 'vue'
 import { useStore } from 'vuex'
 import { Chart, Tooltip, registerables } from 'chart.js'
 
@@ -34,8 +34,15 @@ export default defineComponent({
     const CHART = ref()
     var startIndex
     var endIndex
+    var drag = false
+
+    const graphSelectedRange = computed(() => {
+      return $store.getters['main/graphSelectedRange']
+    })
+
     onMounted(async () => {
       await nextTick()
+      const chart = CHART.value.chart
       var canvas = document.getElementById('profile-chart')
       var overlay = document.getElementById('overlay')
       overlay.width = canvas.width
@@ -47,10 +54,40 @@ export default defineComponent({
         startY: 0
       }
 
-      var drag = false
-      const chart = CHART.value.chart
+      const drawRectangle = (x1, x2) => {
+        // const rect = canvas.getBoundingClientRect();
+        const pixelX1 = CHART.value.chart.scales.x.getPixelForValue(x1)
+        const pixelX2 = CHART.value.chart.scales.x.getPixelForValue(x2)
+        const rect = canvas.getBoundingClientRect();
+
+        selectionRect.startX = pixelX1
+        selectionRect.startY = chart.chartArea.top
+
+        selectionRect.w = pixelX2 - pixelX1;
+        selectionContext.globalAlpha = 0.5;
+        selectionContext.clearRect(0, 0, canvas.width, canvas.height);
+        selectionContext.fillRect(selectionRect.startX,
+          selectionRect.startY,
+          selectionRect.w,
+          chart.chartArea.bottom - chart.chartArea.top
+        )
+      }
+
+      const clearGraphSelection = () => {
+        const rect = canvas.getBoundingClientRect();
+        selectionContext.clearRect(0, 0, canvas.width, canvas.height);
+        selectionContext.fillRect(0,
+          chart.chartArea.top,
+          1,
+          chart.chartArea.bottom - chart.chartArea.top);
+      }
 
       canvas.addEventListener('pointerdown', evt => {
+
+        if (!drag) {
+          clearGraphSelection()
+        }
+
         const points = chart.getElementsAtEventForMode(evt, 'index', {
           intersect: false
         })
@@ -82,15 +119,6 @@ export default defineComponent({
                 chart.chartArea.bottom - chart.chartArea.top
               )
               emit('dragOnGraph', { startIndex, endIndex })
-            } else {
-              selectionContext.clearRect(0, 0, canvas.width, canvas.height);
-              var x = evt.clientX - rect.left;
-              if (x > chart.chartArea.left) {
-                selectionContext.fillRect(x,
-                  chart.chartArea.top,
-                  1,
-                  chart.chartArea.bottom - chart.chartArea.top);
-              }
             }
             throttle = false
           }, 50)
@@ -106,9 +134,33 @@ export default defineComponent({
         });
         drag = false;
         endIndex = points[0].index;
+        $store.commit('main/segmentIsSelected', true)
        });
+
+       $store.commit('main/segmentIsSelected', true)
+
+        watch(segmentIsSelected, ( newValue, oldValue ) => {
+          console.log(newValue)
+          if (!newValue) {
+            clearGraphSelection()
+          }
+        })
+
+        watch(graphSelectedRange, ( newValue, oldValue ) => {
+          if (newValue.first) {
+            if (newValue.first < newValue.last) {
+              drawRectangle(newValue.first, newValue.last)
+            } else {
+              drawRectangle(newValue.last, newValue.first)
+            }
+          }
+        })
     })
 
+
+    const segmentIsSelected = computed(() => {
+      return $store.getters['main/segmentIsSelected']
+    })
 
     const dataset = computed(() => {
       return JSON.parse(JSON.stringify($store.getters['main/graphData'].datasets[0]))
@@ -137,13 +189,14 @@ export default defineComponent({
 
     var ctx = document.getElementById('profile-chart');
 
-    Tooltip.positioners.bottom = function (elements, eventPosition) {
-      const { chartArea : { bottom }, scales: { x, y } } = this.chart
-      return {
-        x: x.getPixelForValue(x.getValueForPixel(eventPosition.x)),
-        y: bottom
-      }
-    }
+    // Tooltip.positioners.bottom = function (elements, eventPosition) {
+    //   const { chartArea : { bottom }, scales: { x, y } } = this.chart
+    //   return {
+    //     x: x.getPixelForValue(x.getValueForPixel(eventPosition.x)),
+    //     y: bottom
+    //   }
+    // }
+
     const externalTooltipHandler = (context) => {
       // Tooltip Element
       const {chart, tooltip} = context;
@@ -231,6 +284,7 @@ export default defineComponent({
     plugins.value = [tooltipLine]
 
     const mouseOut = (e) => {
+      drag = false;
       emit('outGraphic')
     }
 

@@ -16,6 +16,8 @@ export default function () {
     activeTool: '',
     directionArrow: require('../../assets/img/arrow.png'),
     trackInfo: {},
+    graphSelectedRange: {},
+    segmentIsSelected: false,
     graphData: {
       labels: [],
       datasets: [

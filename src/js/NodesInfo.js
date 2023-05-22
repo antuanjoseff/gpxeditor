@@ -135,6 +135,7 @@ export class NodesInfo {
   clickLayer(e) {
     if (!this.selectedLayer) {
       this.cleanSegment()
+      this.map.dispatchEvent('unselect-track')
       return
     }
     this.initCoords = this.selectedLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()
@@ -337,6 +338,7 @@ export class NodesInfo {
     response.distances = xDataGraph
     response.elevations = yDataGraph
     response.speed = speedData
+    response.indexes = { first, last }
     this.trackInfo = response
     if (this.callback) {
       this.callback(response)
