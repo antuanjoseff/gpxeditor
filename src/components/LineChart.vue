@@ -61,19 +61,22 @@ export default defineComponent({
         const rect = canvas.getBoundingClientRect();
 
         selectionRect.startX = pixelX1
-        selectionRect.startY = chart.chartArea.top
+        // selectionRect.startY = chart.chartArea.top
+
+        const eleOrigin = CHART.value.chart.scales.altitud.getPixelForValue(0)
 
         selectionRect.w = pixelX2 - pixelX1;
         selectionContext.globalAlpha = 0.5;
         selectionContext.clearRect(0, 0, canvas.width, canvas.height);
         selectionContext.fillRect(selectionRect.startX,
-          selectionRect.startY,
+          chart.chartArea.top,
           selectionRect.w,
-          chart.chartArea.bottom - chart.chartArea.top
+          eleOrigin - chart.chartArea.top
         )
       }
 
       const clearGraphSelection = () => {
+        $store.commit('main/segmentIsSelected', false)
         const rect = canvas.getBoundingClientRect();
         selectionContext.clearRect(0, 0, canvas.width, canvas.height);
         selectionContext.fillRect(0,
@@ -104,6 +107,8 @@ export default defineComponent({
           throttle = true
           setTimeout(async () => {
             const rect = canvas.getBoundingClientRect();
+            const eleOrigin = CHART.value.chart.scales.altitud.getPixelForValue(0)
+
             if (drag) {
               const points = chart.getElementsAtEventForMode(evt, 'index', {
                 intersect: false
@@ -113,10 +118,11 @@ export default defineComponent({
               selectionRect.w = (evt.clientX - rect.left) - selectionRect.startX;
               selectionContext.globalAlpha = 0.5;
               selectionContext.clearRect(0, 0, canvas.width, canvas.height);
+
               selectionContext.fillRect(selectionRect.startX,
-                selectionRect.startY,
+                chart.chartArea.top,
                 selectionRect.w,
-                chart.chartArea.bottom - chart.chartArea.top
+                eleOrigin - chart.chartArea.top
               )
               emit('dragOnGraph', { startIndex, endIndex })
             }
@@ -140,7 +146,6 @@ export default defineComponent({
        $store.commit('main/segmentIsSelected', true)
 
         watch(segmentIsSelected, ( newValue, oldValue ) => {
-          console.log(newValue)
           if (!newValue) {
             clearGraphSelection()
           }

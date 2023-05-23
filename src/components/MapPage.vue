@@ -49,6 +49,7 @@ import {containsXY} from 'ol/extent';
 export default {
   setup() {
     let animatedPoint
+    let activeLayerCoords = undefined
     const $store = useStore()
     const center = ref(transform([ 2.92298, 41.93445 ], 'EPSG:4326', 'EPSG:3857'));
     const projection = ref("EPSG:3857");
@@ -541,9 +542,9 @@ export default {
     }
 
     const activateNodesInfo = () => {
+      tools.info.callback = showTrackData
       tools.info.activate()
       $store.commit('main/activeTool', 'info')
-      tools.info.callback = showTrackData
       map.value.map.on('unselect-track', unselectSegment)
     }
 
@@ -565,11 +566,29 @@ export default {
       }
       $store.commit('main/setTrackInfo', data)
       $store.commit('main/graphSelectedRange', payload.indexes)
+      $store.commit('main/segmentIsSelected', true)
     }
+
+    const segmentIsSelected = computed(() => {
+      return $store.getters['main/segmentIsSelected']
+    })
+
+    watch(segmentIsSelected, ( newValue, oldValue ) => {
+      if (!newValue) {
+        tools.info.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().setCoordinates([[]])
+      }
+    })
 
     const showTrackData = function (payload) {
       const data = updateGraphData(payload)
       // UPDATE GRAPH DATA
+      if (!payload.elevations) {
+        updateGraphData(payload)
+        return
+      } else {
+        activeLayerCoords = tools.info.initCoords
+      }
+
       $store.commit('main/graphData', {
         labels: payload.distances,
         datasets: [
@@ -772,7 +791,6 @@ export default {
       animatedPoint.getSource().getFeatures()[0].getGeometry().setCoordinates([])
     }
 
-    let activeLayerCoords = undefined
     watch(activeLayerId, ( newValue, oldValue ) => {
       const l = findLayer(newValue)
       if (newValue){
@@ -791,7 +809,7 @@ export default {
       tools.info.startIndex = startIndex
       tools.info.endIndex = endIndex
       tools.info.callback = updateGraphData
-      tools.info.sumUp()
+      tools.info.sumUp(startIndex, endIndex)
     }
 
     return {

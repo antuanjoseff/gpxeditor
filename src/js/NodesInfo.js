@@ -138,7 +138,9 @@ export class NodesInfo {
       this.map.dispatchEvent('unselect-track')
       return
     }
+    // A layer has been selected. Get coord and sumup track info
     this.initCoords = this.selectedLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()
+    this.sumUp(0, this.initCoords.length - 1)
     unByKey(this.bindPointerMove)
     unByKey(this.bindClick)
 
@@ -147,7 +149,7 @@ export class NodesInfo {
   }
 
   clickSegment(e) {
-    this.sumUp()
+    this.sumUp(this.startIndex, this.endIndex)
     const data = this.trackInfo
     const response = this.trackInfo
     response.type = 'track-info'
@@ -179,7 +181,7 @@ export class NodesInfo {
           segmentCoords = this.initCoords.slice(this.startIndex, this.endIndex + 1)
         }
         this.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().setCoordinates(segmentCoords)
-        this.sumUp()
+        this.sumUp(this.startIndex, this.endIndex)
       }
 
       _this.throttleTimer = false
@@ -219,18 +221,18 @@ export class NodesInfo {
     }, this.throttleTime)
   }
 
-  sumUp() {
-    if (this.startIndex === this.endIndex) {
+  sumUp(first, last) {
+    if (first === last) {
       return {}
     }
     var _this = this
 
     // Copy nodes just in case they are changed
-    var first = this.startIndex
-    var last = this.endIndex
+    // var first = this.startIndex
+    // var last = this.endIndex
     // const data = this.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()
     if (first > last) {
-      const tmp = this.startIndex
+      const tmp = first
       first = last
       last = tmp
     }
@@ -326,17 +328,17 @@ export class NodesInfo {
     let xDataGraph
     let yDataGraph
     let speedData
-    if (this.startIndex > this.endIndex){
-      xDataGraph = this.distances.slice(this.endIndex, _this.startIndex + 1)
-      yDataGraph = this.elevations.slice(this.endIndex, _this.startIndex + 1)
-      speedData = this.speed.slice(this.endIndex, _this.startIndex + 1)
-    } else {
-      xDataGraph = this.distances.slice(this.startIndex, this.endIndex + 1)
-      yDataGraph = this.elevations.slice(this.startIndex, this.endIndex + 1)
-      speedData = this.speed.slice(this.startIndex, this.endIndex + 1)
-    }
+    
+    xDataGraph = this.distances.slice(first, last + 1)
+    yDataGraph = this.elevations.slice(first, last + 1)
+    speedData = this.speed.slice(first, last + 1)
+  
     response.distances = xDataGraph
-    response.elevations = yDataGraph
+    // Elevations only when this.selectedSegmentLayer  has no coords
+    if (this.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().getCoordinates().length === 0) {
+      response.elevations = yDataGraph
+    }
+
     response.speed = speedData
     response.indexes = { first, last }
     this.trackInfo = response
@@ -389,7 +391,7 @@ export class NodesInfo {
     this.nodesSource = this.getNodesSource(coords)
     this.startIndex = 0
     this.endIndex = coords.length - 1
-    this.sumUp()
+    this.sumUp(0, this.initCoords.length - 1)
     return this.trackInfo
   }
 
