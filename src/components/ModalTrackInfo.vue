@@ -41,33 +41,43 @@
                         name="terrain"
                       />
                     Elevation
+                    <q-icon
+                        class="toc-layer-icon right"
+                        name="settings"
+                        @click="toggleSlider"
+                      />
+                      <q-slider v-if="slider"
+                        label
+                        v-model="sliderValue" :min="0" :max="300"
+                        @update:model-value="updateTolerance"
+                        />
                   </div>
                   <div v-if="info.elevation" class="flex">
-                                              <div class="q-mx-sm">
-                                                {{ info.elevation.up }} m
-                                                <q-icon class="toc-layer-icon" name="trending_up"/>
-                                              </div>
+                        <div class="q-mx-sm">
+                          {{ info.elevation.up }} m
+                          <q-icon class="toc-layer-icon" name="trending_up"/>
+                        </div>
 
-                                              <div class="q-mx-sm">
-                                                  {{ info.elevation.down }} m
-                                                  <q-icon class="toc-layer-icon" name="trending_down"/>
-                                              </div>
+                        <div class="q-mx-sm">
+                            {{ info.elevation.down }} m
+                            <q-icon class="toc-layer-icon" name="trending_down"/>
+                        </div>
 
-                                              <div class="q-mx-sm">
-                                                {{ info.elevation.maxEle }} m
-                                                <q-icon
-                                                  class="toc-layer-icon"
-                                                  name="vertical_align_top"
-                                                />
-                                              </div>
+                        <div class="q-mx-sm">
+                          {{ info.elevation.maxEle }} m
+                          <q-icon
+                            class="toc-layer-icon"
+                            name="vertical_align_top"
+                          />
+                        </div>
 
-                                              <div class="q-mx-sm">
-                                                  {{ info.elevation.minEle }} m
-                                                <q-icon
-                                                  class="toc-layer-icon"
-                                                  name="vertical_align_bottom"
-                                                />
-                                            </div>
+                        <div class="q-mx-sm">
+                            {{ info.elevation.minEle }} m
+                          <q-icon
+                            class="toc-layer-icon"
+                            name="vertical_align_bottom"
+                          />
+                      </div>
                 </div>
                 </div>
                 <!-- CANCEL / CREATE TRACK BUTTONS -->
@@ -106,7 +116,7 @@
   </template>
 
 <script>
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, ref } from 'vue'
 import { useStore } from 'vuex'
 import LineChart from 'components/LineChart.vue'
 
@@ -117,7 +127,8 @@ export default defineComponent({
   components: { LineChart },
   setup(props, context){
     const $store = useStore()
-
+    const slider = ref(false)
+    const sliderValue = ref(false)
     const activeTool = computed(() => {
       return $store.getters['main/activeTool']
     })
@@ -142,6 +153,15 @@ export default defineComponent({
       context.emit('over-graphic', data)
     }
 
+    const updateTolerance = (val) => {
+      $store.commit('main/toleranceForElevationGain', val)
+    }
+
+    const toggleSlider = () => {
+      slider.value = !slider.value
+      return slider.value
+    }
+
     const outGraphic = (data) => {
       context.emit('out-graphic', data)
       document.getElementById('tooltip-footer').innerHTML = ''
@@ -155,6 +175,10 @@ export default defineComponent({
 
     return {
       info,
+      slider,
+      sliderValue,
+      updateTolerance,
+      toggleSlider,
       dragOnGraph,
       cancelTrackProfile,
       outGraphic,

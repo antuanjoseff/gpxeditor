@@ -26,8 +26,16 @@ export function numberOfDrawnParts ( state ) {
     return state.numberOfDrawnParts
 }
 
+export function toleranceForElevationGain ( state ) {
+    return state.toleranceForElevationGain
+}
+
 export function numLayers ( state ) {
     return state.numLayers
+}
+
+export function ActiveLayerTrackInfo ( state ) {
+    return state.ActiveLayerTrackInfo
 }
 
 export function getTrackInfo ( state ) {

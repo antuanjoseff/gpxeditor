@@ -96,6 +96,14 @@ export function numLayers (state, n) {
     state.numLayers = n
 }
 
+export function toleranceForElevationGain (state, payload) {
+    state.toleranceForElevationGain = payload
+}
+
+export function ActiveLayerTrackInfo (state, payload) {
+    state.ActiveLayerTrackInfo = payload
+}
+
 export function setTrackInfo (state, payload) {
     state.trackInfo = payload
 }

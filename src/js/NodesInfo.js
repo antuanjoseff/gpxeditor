@@ -33,6 +33,7 @@ export class NodesInfo {
     this.elevations = []
     this.distances = []
     this.speed = []
+    this.tolerance = 60
 
     this.selectedNodeLayer = new VectorLayer({
       id: 'nodes',
@@ -274,7 +275,7 @@ export class NodesInfo {
     // GET ELEVATION IF EXISTS.Take a messarement with a tolerance of X seconds
     var up = 0
     var down = 0
-    var tolerance = 60 // Seconds
+    var tolerance = this.tolerance // Seconds
     var elapsed  = 0
 
     var coordsList = this.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()
@@ -384,6 +385,11 @@ export class NodesInfo {
       nodesSource.addFeature(f)
     })
     return nodesSource
+  }
+
+  changeTolerance(tolerance, firstIndex, lastIndex) {
+    this.tolerance = tolerance
+    this.sumUp(firstIndex, lastIndex)
   }
 
   getInfoFromCoords(coords) {

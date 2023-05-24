@@ -161,6 +161,10 @@ export default {
       return styles;
     }
 
+    const toleranceForElevationGain = computed(() => {
+      return $store.getters['main/toleranceForElevationGain']
+    })
+
     const activeLayerId = computed(() => {
       return $store.getters['main/activeLayerId']
     })
@@ -549,8 +553,8 @@ export default {
     }
 
     const unselectSegment = () => {
-      console.log('unselect segment')
       $store.commit('main/segmentIsSelected', false)
+      $store.commit('main/setTrackInfo', $store.getters['main/ActiveLayerTrackInfo'])
     }
 
     const updateGraphData = function (payload) {
@@ -573,6 +577,11 @@ export default {
       return $store.getters['main/segmentIsSelected']
     })
 
+    watch(toleranceForElevationGain, ( newValue, oldValue ) => {
+      const range = $store.getters['main/graphSelectedRange']
+      tools.info.changeTolerance(newValue, range.first, range.last)
+    })
+
     watch(segmentIsSelected, ( newValue, oldValue ) => {
       if (!newValue) {
         tools.info.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().setCoordinates([[]])
@@ -587,6 +596,7 @@ export default {
         return
       } else {
         activeLayerCoords = tools.info.initCoords
+        $store.commit('main/ActiveLayerTrackInfo', payload)
       }
 
       $store.commit('main/graphData', {
@@ -782,7 +792,7 @@ export default {
       // map.value.map.once('track-info', showTrackData)
       tools.info.callback = showTrackData
       tools.info.getInfoFromCoords(coords)
-      // tools.info.activate()
+      tools.info.deactivate()
       activateNodesInfo()
       tools.info.initCoords = coords
     }

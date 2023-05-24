@@ -191,6 +191,7 @@ export default defineComponent({
 
     const showTrackProfile = (layerId) => {
       context.emit('track-profile', layerId)
+      zoomToLayer(layerId)
       setActiveLayer(layerId)
     }
 
