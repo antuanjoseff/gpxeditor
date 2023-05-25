@@ -546,6 +546,13 @@ export default {
     }
 
     const activateNodesInfo = () => {
+      console.log((activeLayerId.value))
+      if (activeLayerId.value) {
+        const layer = findLayer(activeLayerId.value)
+        const coords = getCoords(layer)
+        tools.info.initCoords = coords
+        tools.info.selectedLayerId = activeLayerId.value
+      }
       tools.info.callback = showTrackData
       tools.info.activate()
       $store.commit('main/activeTool', 'info')
@@ -597,6 +604,7 @@ export default {
       } else {
         activeLayerCoords = tools.info.initCoords
         $store.commit('main/ActiveLayerTrackInfo', payload)
+        $store.commit('main/activeLayerId', payload.layerId)
       }
 
       $store.commit('main/graphData', {
@@ -605,8 +613,9 @@ export default {
         {
             label: 'Speed ',
             data: payload.speed,
-            fill: false,
-            borderColor: 'rgb(0,0,255,0.4)',
+            fill: true,
+            borderColor: 'rgb(0,0,255, .3)',
+            backgroundColor: 'rgb(0, 0, 255, 0.2)',
             borderWidth: '.5',
             pointRadius: 0,
             pointHoverRadius: 5,
@@ -638,10 +647,15 @@ export default {
       tools.cutter.activate()
     }
 
-    const addNewSegment = function (name, tailCoords) {
-      const trackinfo = tools.info.getInfoFromCoords(tailCoords)
+    const addNewSegment = function (type) {
+      console.log('addNewSegment')
+      const layer = findLayer(activeLayerId.value)
+      const filename = layer.get('name') + '(' + type + ')'
+      var coords = tools.info.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()
+      console.log(coords)
+      const trackinfo = tools.info.getInfoFromCoords(coords)
       const layerId = newLayerId()
-      const filename = name + '(nova)'
+
       var newLayer = new VectorLayer({
         id: layerId,
         name: filename,
@@ -651,7 +665,7 @@ export default {
         source: new VectorSource({
           features: [
             new Feature({
-              geometry: new LineString(tailCoords)
+              geometry: new LineString(coords)
             })
           ]
         }),
@@ -786,15 +800,15 @@ export default {
       map.value.map.getView().animate({ center: location, duration: duration })
     }
 
-    const trackProfile = (layerId) => {
+    const trackProfile = async (layerId) => {
       const layer = findLayer(layerId)
       const coords = getCoords(layer)
       // map.value.map.once('track-info', showTrackData)
       tools.info.callback = showTrackData
-      tools.info.getInfoFromCoords(coords)
+      await tools.info.getInfoFromCoords(coords)
       tools.info.deactivate()
+      tools.info.selectedLayersId = layerId
       activateNodesInfo()
-      tools.info.initCoords = coords
     }
 
     const clearAnimatedPoint = () => {

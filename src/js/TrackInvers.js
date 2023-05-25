@@ -1,10 +1,7 @@
-import {unByKey} from 'ol/Observable'
-import { Style, Stroke } from 'ol/style';
 import VectorLayer from 'ol/layer/Vector.js';
 import VectorSource from 'ol/source/Vector.js';
 import Feature from 'ol/Feature.js';
 import LineString from 'ol/geom/LineString.js';
-import {selectStyle} from './utils.js';
 import {LayerSelector} from './LayerSelector.js';
 
 export class TrackInvers {

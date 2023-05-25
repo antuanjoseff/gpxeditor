@@ -8,6 +8,7 @@ import { Distance, projDistance } from './utils.js';
 import { transform, transformExtent } from 'ol/proj.js'
 import {selectStyle} from './utils.js';
 import {unByKey} from 'ol/Observable'
+import {LayerSelector} from './LayerSelector.js';
 
 export class NodesInfo {
   /**
@@ -34,6 +35,7 @@ export class NodesInfo {
     this.distances = []
     this.speed = []
     this.tolerance = 60
+    this.selectedLayerId = undefined
 
     this.selectedNodeLayer = new VectorLayer({
       id: 'nodes',
@@ -80,14 +82,30 @@ export class NodesInfo {
   activate() {
     var _this = this
     this.active = true
-    // setTimeout(function () {
-    //   _this.cleanSegment()
-    // }, 1000)
+    this.layerSelector = new LayerSelector(this.map,{
+      throttleTime: 0
+    })
+    console.log(this.selectedLayerId)
+    if (!this.selectedLayerId) {
+      this.layerSelector.on()
+      this.map.once('layer-selected', function(e){
+        _this.selectedLayerId = e.layer.get('id')
+        _this.layerSelector.off()
+        var coords = e.layer.getSource().getFeatures()[0].getGeometry().getCoordinates()
+        _this.initCoords = coords
+        _this.nodesSource = _this.getNodesSource(coords)
+        _this.selectedLayer = e.layer
+        _this.bindPointerMove = _this.map.on('pointermove', _this.pointerMoveLayer.bind(_this))
+        _this.bindClick = _this.map.on('click', _this.clickLayer.bind(_this))
+        _this.sumUp(0, _this.initCoords.length - 1)
+      })
+    } else {
+      this.nodesSource = this.getNodesSource(this.initCoords)
+      this.bindPointerMove = this.map.on('pointermove', this.pointerMoveLayer.bind(this))
+      this.bindClick = this.map.on('click', this.clickLayer.bind(this))
+    }
     this.map.addLayer(this.selectedNodeLayer)
     this.map.addLayer(this.selectedSegmentLayer)
-
-    this.bindPointerMove = this.map.on('pointermove', this.pointerMoveLayer.bind(this))
-    this.bindClick = this.map.on('click', this.clickLayer.bind(this))
   }
 
   // TODO
@@ -139,9 +157,6 @@ export class NodesInfo {
       this.map.dispatchEvent('unselect-track')
       return
     }
-    // A layer has been selected. Get coord and sumup track info
-    this.initCoords = this.selectedLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()
-    this.sumUp(0, this.initCoords.length - 1)
     unByKey(this.bindPointerMove)
     unByKey(this.bindClick)
 
@@ -222,7 +237,9 @@ export class NodesInfo {
     }, this.throttleTime)
   }
 
+
   sumUp(first, last) {
+    // console.log(this.nodesSource.getFeatures().length)
     if (first === last) {
       return {}
     }
@@ -245,7 +262,9 @@ export class NodesInfo {
     const eF = this.nodesSource.getFeatures().find((f) => {
       return f.get('id') === last
     })
-
+    if (sF === undefined || eF === undefined) {
+      return
+    }
     const response = {}
 
     // GET DISTANCE (MKS: METERS)
@@ -329,17 +348,18 @@ export class NodesInfo {
     let xDataGraph
     let yDataGraph
     let speedData
-    
+
     xDataGraph = this.distances.slice(first, last + 1)
     yDataGraph = this.elevations.slice(first, last + 1)
     speedData = this.speed.slice(first, last + 1)
-  
+
     response.distances = xDataGraph
     // Elevations only when this.selectedSegmentLayer  has no coords
     if (this.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().getCoordinates().length === 0) {
       response.elevations = yDataGraph
     }
 
+    response.layerId = this.selectedLayerId
     response.speed = speedData
     response.indexes = { first, last }
     this.trackInfo = response
@@ -392,7 +412,7 @@ export class NodesInfo {
     this.sumUp(firstIndex, lastIndex)
   }
 
-  getInfoFromCoords(coords) {
+  async getInfoFromCoords(coords) {
     this.initCoords = coords
     this.nodesSource = this.getNodesSource(coords)
     this.startIndex = 0

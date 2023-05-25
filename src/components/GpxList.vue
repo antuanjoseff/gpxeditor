@@ -181,9 +181,9 @@ export default defineComponent({
       context.emit('download-track', layerId)
     }
 
-    const createTrack = (payload) => {
-      context.emit('create-track', payload)
-    }
+    // const createTrack = (payload) => {
+    //   context.emit('create-track', payload)
+    // }
 
     const overGraphic = (data) => {
       context.emit('overGraphic', data)
@@ -199,7 +199,7 @@ export default defineComponent({
       data,
       showTrackProfile,
       overGraphic,
-      createTrack,
+      // createTrack,
       downloadTrack,
       draggable,
       over,

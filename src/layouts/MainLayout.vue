@@ -121,7 +121,7 @@
           @changeColor="changeColor"
           @finishDrag="finishDrag"
           @downloadTrack="downloadTrack"
-          @createTrack="createTrack"
+          @selectedSegmentCreateTrack="selectedSegmentCreateTrack"
           @overGraphic="overGraphic"
           @trackProfile="trackProfile"
         />
@@ -138,7 +138,7 @@
         </div>
         <div>
           <modal-track-info 
-            @createTrack="createTrack"
+            @selectedSegmentCreateTrack="selectedSegmentCreateTrack"
             @overGraphic="overGraphic"
             @outGraphic="outGraphic"
             @dragOnGraph="dragOnGraph"
@@ -298,9 +298,11 @@ export default defineComponent({
       MAP.value.downloadGPX(layerId)
     }
 
-    const createTrack = (payload) => {
-      const filename = payload.name + ' (segment)'
-      MAP.value.addNewSegment(filename, payload.data)
+    const selectedSegmentCreateTrack = async (payload) => {
+      console.log('layout calls map')
+      const type = 'segment'
+      console.log('main layout add new segment')
+      await MAP.value.addNewSegment(type)
       MAP.value.tools.info.cleanSegment()
     }
 
@@ -327,7 +329,7 @@ export default defineComponent({
       overGraphic,
       downloadFile,
       downloadTrack,
-      createTrack,
+      selectedSegmentCreateTrack,
       numberOfLayers,
       existsLayers,
       drawClass,

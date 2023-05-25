@@ -123,7 +123,7 @@ import LineChart from 'components/LineChart.vue'
 export default defineComponent({
 
   name: 'ModalTrackInfo',
-  emits: ['create-track', 'over-graphic', 'dragOnGraph'],
+  emits: ['selected-segment-create-track', 'over-graphic', 'dragOnGraph'],
   components: { LineChart },
   setup(props, context){
     const $store = useStore()
@@ -138,10 +138,8 @@ export default defineComponent({
     })
 
     const createTrack = () => {
-      context.emit('create-track', {
-        data: info.value.data,
-        name: info.value.name
-      })
+      console.log('click')
+      context.emit('selected-segment-create-track')
       $store.commit('main/setTrackInfo', {})
     }
 

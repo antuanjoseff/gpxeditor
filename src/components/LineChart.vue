@@ -15,7 +15,7 @@
 
 <script>
 import { Line as LineChart } from 'vue-chartjs'
-import { ref, watch, nextTick, onMounted, computed, defineComponent } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted, computed, defineComponent } from 'vue'
 import { useStore } from 'vuex'
 import { Chart, Tooltip, registerables } from 'chart.js'
 
@@ -32,47 +32,58 @@ export default defineComponent({
   setup(props, { emit }) {
     const $store = useStore()
     const CHART = ref()
-    var startIndex
-    var endIndex
+    var startIndex, endIndex
+    var canvas, overlay, chart
+    var selectionContext, selectionRect
     var drag = false
 
     const graphSelectedRange = computed(() => {
       return $store.getters['main/graphSelectedRange']
     })
 
+    const resizeHandler = () => {
+      console.log(startIndex, endIndex)
+      drawRectangle(startIndex, endIndex)
+    }
+
+    onUnmounted(async () => {
+      window.removeEventListener("resize", resizeHandler)
+    })
+
+    const drawRectangle = (x1, x2) => {
+      // const rect = canvas.getBoundingClientRect();
+      const pixelX1 = CHART.value.chart.scales.x.getPixelForValue(x1)
+      const pixelX2 = CHART.value.chart.scales.x.getPixelForValue(x2)
+      const rect = canvas.getBoundingClientRect();
+
+      selectionRect.startX = pixelX1
+      // selectionRect.startY = chart.chartArea.top
+
+      const eleOrigin = CHART.value.chart.scales.altitud.getPixelForValue(0)
+
+      selectionRect.w = pixelX2 - pixelX1;
+      selectionContext.globalAlpha = 0.5;
+      selectionContext.clearRect(0, 0, canvas.width, canvas.height);
+      selectionContext.fillRect(selectionRect.startX,
+        chart.chartArea.top,
+        selectionRect.w,
+        eleOrigin - chart.chartArea.top
+      )
+    }
+
     onMounted(async () => {
       await nextTick()
-      const chart = CHART.value.chart
-      var canvas = document.getElementById('profile-chart')
-      var overlay = document.getElementById('overlay')
+      window.addEventListener("resize", resizeHandler)
+      chart = CHART.value.chart
+      canvas = document.getElementById('profile-chart')
+      overlay = document.getElementById('overlay')
       overlay.width = canvas.width
       overlay.height = canvas.height
-      var selectionContext = overlay.getContext('2d')
-      var selectionRect = {
+      selectionContext = overlay.getContext('2d')
+      selectionRect = {
         w: 0,
         startX: 0,
         startY: 0
-      }
-
-      const drawRectangle = (x1, x2) => {
-        // const rect = canvas.getBoundingClientRect();
-        const pixelX1 = CHART.value.chart.scales.x.getPixelForValue(x1)
-        const pixelX2 = CHART.value.chart.scales.x.getPixelForValue(x2)
-        const rect = canvas.getBoundingClientRect();
-
-        selectionRect.startX = pixelX1
-        // selectionRect.startY = chart.chartArea.top
-
-        const eleOrigin = CHART.value.chart.scales.altitud.getPixelForValue(0)
-
-        selectionRect.w = pixelX2 - pixelX1;
-        selectionContext.globalAlpha = 0.5;
-        selectionContext.clearRect(0, 0, canvas.width, canvas.height);
-        selectionContext.fillRect(selectionRect.startX,
-          chart.chartArea.top,
-          selectionRect.w,
-          eleOrigin - chart.chartArea.top
-        )
       }
 
       const clearGraphSelection = () => {
@@ -124,6 +135,7 @@ export default defineComponent({
                 selectionRect.w,
                 eleOrigin - chart.chartArea.top
               )
+
               emit('dragOnGraph', { startIndex, endIndex })
             }
             throttle = false
@@ -155,8 +167,12 @@ export default defineComponent({
           if (newValue.first) {
             if (newValue.first < newValue.last) {
               drawRectangle(newValue.first, newValue.last)
+              startIndex = newValue.first
+              endIndex = newValue.last
             } else {
               drawRectangle(newValue.last, newValue.first)
+              startIndex = newValue.last
+              endIndex = newValue.first
             }
           }
         })
