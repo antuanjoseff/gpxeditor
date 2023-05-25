@@ -35,6 +35,7 @@ var options = {
 var canvas = document.getElementById('chartJSContainer');
 var ctx = canvas.getContext('2d');
 var chart = new Chart(ctx, options);
+
 var overlay = document.getElementById('overlay');
 var startIndex = 0;
 overlay.width = canvas.width;

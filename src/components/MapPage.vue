@@ -42,6 +42,7 @@ import { Distance, projeDistance } from '../js/utils.js';
 import Feature from 'ol/Feature.js';
 import Point from 'ol/geom/Point.js';
 import LineString from 'ol/geom/LineString.js';
+import MultiLineString from 'ol/geom/MultiLineString.js';
 import { transform, transformExtent } from 'ol/proj.js'
 import {animatedPointStyle} from '../js/utils.js';
 import {containsXY} from 'ol/extent';
@@ -647,12 +648,14 @@ export default {
       tools.cutter.activate()
     }
 
-    const addNewSegment = function (type) {
-      console.log('addNewSegment')
-      const layer = findLayer(activeLayerId.value)
-      const filename = layer.get('name') + '(' + type + ')'
+    const addNewSegmentFromGraph = function (fromLayerId, type) {
       var coords = tools.info.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().getCoordinates()
-      console.log(coords)
+      addNewSegment(fromLayerId, coords, type)
+    }
+
+    const addNewSegment = function (fromLayerId, coords, type) {
+      const layer = findLayer(fromLayerId)
+      const filename = layer.get('name') + '(' + type + ')'
       const trackinfo = tools.info.getInfoFromCoords(coords)
       const layerId = newLayerId()
 
@@ -684,7 +687,6 @@ export default {
     }
 
     var downloadGPX = function (layerId) {
-      console.log(layerId)
       const layer = findLayer(layerId)
       var features = layer.getSource().getFeatures()
       var coords = []
@@ -694,7 +696,7 @@ export default {
       var text = new GPX().writeFeatures(
         // route_layer.getSource().getFeatures(),
         [new Feature({
-          geometry: new LineString(coords),
+          geometry: new MultiLineString([coords]),
         })],
         {
           featureProjection: 'EPSG:3857',
@@ -845,6 +847,7 @@ export default {
       tools,
       downloadGPX,
       addNewSegment,
+      addNewSegmentFromGraph,
       activateTool,
       deactivateTool,
       activeCutter,

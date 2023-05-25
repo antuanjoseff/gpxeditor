@@ -302,7 +302,7 @@ export default defineComponent({
       console.log('layout calls map')
       const type = 'segment'
       console.log('main layout add new segment')
-      await MAP.value.addNewSegment(type)
+      await MAP.value.addNewSegmentFromGraph(activeLayerId.value, type)
       MAP.value.tools.info.cleanSegment()
     }
 

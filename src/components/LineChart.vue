@@ -165,15 +165,8 @@ export default defineComponent({
 
         watch(graphSelectedRange, ( newValue, oldValue ) => {
           if (newValue.first) {
-            if (newValue.first < newValue.last) {
-              drawRectangle(newValue.first, newValue.last)
-              startIndex = newValue.first
-              endIndex = newValue.last
-            } else {
-              drawRectangle(newValue.last, newValue.first)
-              startIndex = newValue.last
-              endIndex = newValue.first
-            }
+            drawRectangle(newValue.first, newValue.last)
+            endIndex = newValue.last
           }
         })
     })

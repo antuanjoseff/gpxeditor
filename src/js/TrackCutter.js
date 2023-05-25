@@ -16,7 +16,7 @@ export class TrackCutter {
     this.callback = options.callback
     this.active = false
     this.initCoords = []
-    this.layerToCut = undefined
+    this.selectedLayerId = undefined
     this.layerToCut = undefined
     this.pointermoveBinder = undefined
     this.clickBinder = undefined
@@ -71,6 +71,7 @@ export class TrackCutter {
       if (_this.pause) return
       const hit = this.map.forEachFeatureAtPixel(e.pixel, function (feature, layer) {
         _this.layerToCut = layer
+        _this.selectedLayerId = layer.get('id')
         _this.initCoords = layer.getSource().getFeatures()[0].getGeometry().getCoordinates()
         _this.nodesLayer = _this.getNodesLayer(_this.initCoords)
 
@@ -89,6 +90,7 @@ export class TrackCutter {
       } else {
         this.map.getTargetElement().style.cursor = ''
         _this.layerToCut = undefined
+        _this.selectedLayerId = undefined
         _this.segmentLayer.getSource().getFeatures()[0].getGeometry().setCoordinates([[]])
       }
       _this.throttleTimer = false
@@ -98,8 +100,9 @@ export class TrackCutter {
 
   done() {
     this.callback(
-      this.layerToCut.get('name'),
-      this.tailCoords
+      this.selectedLayerId,
+      this.tailCoords,
+      'cut'
     )
 
     this.layerToCut.getSource().getFeatures()[0].getGeometry().setCoordinates(this.headCoords)

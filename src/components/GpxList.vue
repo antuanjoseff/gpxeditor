@@ -9,7 +9,7 @@
       animation=450
     >
       <template #item="{ element }">
-        <div class="drag-item" :class="element.active?'active':''">
+        <div class="drag-item" :class="element.active?'active':''" @click="setActiveLayer(element.id)">
           <q-item tag="div" v-ripple>
             <q-item-section side top>
               <div>
@@ -17,21 +17,30 @@
                   v-if="element.visible==true"
                   class="toc-layer-icon"
                   name="visibility"
-                  @click.prevent="toggleVisibility(element, element.id)"
+                  @click.stop.prevent="toggleVisibility(element, element.id)"
                 />
                 <q-icon
                   v-else
                   class="toc-layer-icon"
                   name="visibility_off"
-                  @click.prevent="toggleVisibility(element, element.id)"
+                  @click.stop.prevent="toggleVisibility(element, element.id)"
                 />
-                <div>
-                <input :id="'color-picker_' + element.id" type="color" size="2" value="element.color" @input="changeColor($event, element.id)" hidden/>
-                <label :for="'color-picker_' + element.id">
-                  <q-icon class="toc-layer-icon palette q-mr-sm" :style="{color:element.color,background:element.color}" name="square"/>
-                </label>
-              </div>
-
+                <div @click.stop>
+                  <div>
+                    <input
+                      :id="'color-picker_' + element.id"
+                      type="color"
+                      value="element.color"
+                      @input="changeColor($event, element.id)" hidden
+                    />
+                  </div>
+                  <label :for="'color-picker_' + element.id">
+                    <q-icon
+                      class="toc-layer-icon palette q-mr-sm"
+                      :style="{color:element.color,background:element.color}"
+                      name="square"/>
+                  </label>
+                </div>
               </div>
             </q-item-section>
 
@@ -44,7 +53,7 @@
                   caption
                   class="zoom-in"
                   @doubleclick.prevent="setActiveLayer(element.id)"
-                  @click.prevent="zoomToLayer(element.id)"
+                  @click.stop="zoomToLayer(element.id)"
                 >
                   {{ element.label }} - {{ element.id }}
                 </q-item-label>
@@ -67,7 +76,7 @@
                   square
                   size="2em"
                   class="track-download"
-                  @click="downloadTrack(element.id)"
+                  @click.stop.prevent="downloadTrack(element.id)"
                 >
                 </q-icon>
               </diV>
@@ -290,5 +299,8 @@ label.active{
 }
 .q-item__section--main + .q-item__section--main {
   margin-left: 3px;
+}
+.no-events{
+  pointer-events: none;
 }
 </style>
