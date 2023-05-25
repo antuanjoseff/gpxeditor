@@ -496,9 +496,9 @@ export default {
 
     const deactivateTool = (name) => {
       toolIsActive = false
+      $store.commit('main/activeLayerId', false)
       $store.commit('main/activeTool', '')
       resetSelected()
-      console.log('DEACTIVATE TOOL ' + name)
       switch (name) {
         case 'join':
           tools.join.deactivate()
@@ -547,7 +547,6 @@ export default {
     }
 
     const activateNodesInfo = () => {
-      console.log((activeLayerId.value))
       if (activeLayerId.value) {
         const layer = findLayer(activeLayerId.value)
         const coords = getCoords(layer)

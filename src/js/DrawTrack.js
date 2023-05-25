@@ -81,13 +81,11 @@ export class DrawTrack {
 
   // TODO
   reset() {
-    console.log('reset')
     this.deactivate()
     this.activate()
   }
 
   deactivate() {
-    console.log('DEACTIVATE BACK')
     this.active = false
     unByKey(this.clickBindId)
     unByKey(this.dblClickBindId)
@@ -112,7 +110,6 @@ export class DrawTrack {
   }
 
   _throttleGetNewPart(e) {
-    console.log('moving.....')
     return
     var _this = this
     if (_this.clicks.length === 0) {

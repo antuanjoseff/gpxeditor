@@ -85,7 +85,7 @@ export class NodesInfo {
     this.layerSelector = new LayerSelector(this.map,{
       throttleTime: 0
     })
-    console.log(this.selectedLayerId)
+
     if (!this.selectedLayerId) {
       this.layerSelector.on()
       this.map.once('layer-selected', function(e){
@@ -122,13 +122,21 @@ export class NodesInfo {
   }
 
   deactivate() {
-    console.log('deactivate')
+    this.selectedLayerId = undefined
     unByKey(this.bindPointerMove)
     unByKey(this.bindClick)
     if (this.selectedSegmentLayer) {
       this.cleanSegment()
 
     }
+    this.selectedLayerId = undefined
+    this.selectedNodeLayer.getSource().clear()
+    this.selectedNodeLayer.getSource().addFeature(
+      new Feature({
+        geometry: new Point([])
+      })
+    )
+
     this.map.removeLayer(this.selectedNodeLayer)
     this.map.removeLayer(this.selectedSegmentLayer)
     this.initCoords = undefined
@@ -148,7 +156,6 @@ export class NodesInfo {
     this.distances = []
     this.speed = []
   }
-
 
 
   clickLayer(e) {
@@ -215,7 +222,7 @@ export class NodesInfo {
         var coords = layer.getSource().getFeatures()[0].getGeometry().getCoordinates()
         _this.nodesSource = _this.getNodesSource(coords)
         return true
-      }, { hitTolerance: 10, layerFilter: (l) => {return l.get('id') != 'nodes'} })
+      }, { hitTolerance: 10, layerFilter: (l) => {return l.get('id') === _this.selectedLayerId} })
       if (hit) {
         var mouseCoord = this.map.getCoordinateFromPixel(e.pixel)
         this.startPoint =this.nodesSource.getClosestFeatureToCoordinate(mouseCoord)
