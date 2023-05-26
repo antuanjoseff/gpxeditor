@@ -32,7 +32,7 @@ import {Style, Fill, Icon, Text, Stroke, RegularShape, Circle} from 'ol/style';
 import GPX from 'ol/format/GPX.js';
 import OSMXML from 'ol/format/OSMXML.js';
 import DragAndDrop from 'ol/interaction/DragAndDrop.js';
-import { Colors, setRandomcolor } from '../js/colors.js';
+import { Colors, colorsSubset } from '../js/colors.js';
 import { TrackCutter } from '../js/TrackCutter.js';
 import { TrackInvers } from '../js/TrackInvers.js';
 import { TrackJoin } from '../js/TrackJoin.js';
@@ -65,7 +65,7 @@ export default {
     let activeLayer
     let styleCache =[]
     let curZoom = zoom.value
-    const gColors = new Colors()
+    const gColors = new Colors(colorsSubset)
     let layerCounter = 10 // Avoid 0 value
   
     const newLayerId = function () {
@@ -599,7 +599,8 @@ export default {
       const data = updateGraphData(payload)
       // UPDATE GRAPH DATA
       if (!payload.elevations) {
-        updateGraphData(payload)
+        console.log('no elevations')
+        // updateGraphData(payload)
         return
       } else {
         activeLayerCoords = tools.info.initCoords
@@ -607,16 +608,18 @@ export default {
         $store.commit('main/activeLayerId', payload.layerId)
       }
 
+      const trans = (payload.speed.length > 2000) ? 0.2 : 0.8
       $store.commit('main/graphData', {
         labels: payload.distances,
         datasets: [
         {
             label: 'Speed ',
+            // hidden: true,
             data: payload.speed,
             fill: true,
-            borderColor: 'rgb(0,0,255, .3)',
+            borderColor: 'rgb(0,0,255, ' + trans + ')',
             backgroundColor: 'rgb(0, 0, 255, 0.2)',
-            borderWidth: '.5',
+            borderWidth: '1',
             pointRadius: 0,
             pointHoverRadius: 5,
             pointHoverBackgroundColor: 'black',
@@ -626,14 +629,15 @@ export default {
           {
             label: 'Altitud ',
             yAxisID: 'altitud',
-            backgroundColor: 'rgb(255, 50, 50, 0.6)',
+            borderColor: 'rgb(255, 50, 50)',
+            backgroundColor: 'rgb(255, 50, 50, 0.4)',
             data: payload.elevations,
             fill: true,
-            borderWidth: 15,
+            borderWidth: 2,
             pointRadius: 0,
             pointHoverRadius: 5,
             pointHoverBackgroundColor: 'black',
-            tension: 0.2
+            tension: 0.5
           }
         ]
       })
@@ -807,8 +811,8 @@ export default {
       // map.value.map.once('track-info', showTrackData)
       tools.info.callback = showTrackData
       await tools.info.getInfoFromCoords(coords)
-      tools.info.deactivate()
       tools.info.selectedLayersId = layerId
+      tools.info.deactivate()
       activateNodesInfo()
     }
 

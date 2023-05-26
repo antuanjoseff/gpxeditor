@@ -42,7 +42,6 @@ export default defineComponent({
     })
 
     const resizeHandler = () => {
-      console.log(startIndex, endIndex)
       drawRectangle(startIndex, endIndex)
     }
 
@@ -238,6 +237,7 @@ export default defineComponent({
       scales: {
         speed: {
           id: 'speed',
+          suggestedMin: 0,
           beginAtZero: true,
           type: 'linear',
           position: 'right',
@@ -249,6 +249,8 @@ export default defineComponent({
           }
         },
         altitud: {
+          suggestedMin: 0,
+          beginAtZero: true,
           id: 'altitud',
           type: 'linear',
           position: 'left',
@@ -310,7 +312,9 @@ export default defineComponent({
         return
       }
 
-      const total  = parseInt(eleData.label)
+      const labels = eleData.label.split(';')
+      const total  = labels[0]
+      const slope = labels[1]
       const speedFormatted = speedData.formattedValue + ' kms/h'
       const kms = Math.floor(total /  1000)
       const meters = Math.floor(total - (1000 * kms))
@@ -319,7 +323,7 @@ export default defineComponent({
       const tooltipHeaderWidth = document.getElementById('tooltip-header').clientWidth
       const tooltipFooterWidth = document.getElementById('tooltip-footer').clientWidth
 
-      document.getElementById('tooltip-footer').innerHTML = label
+      document.getElementById('tooltip-footer').innerHTML = label + ' ' + slope + '%'
       document.getElementById('tooltip-header').innerHTML = eleData.formattedValue + ' m' + ' - ' + speedFormatted
 
       if (eleData.element.x - tooltipHeaderWidth < chartArea.width){

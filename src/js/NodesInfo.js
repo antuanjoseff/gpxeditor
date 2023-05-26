@@ -34,6 +34,7 @@ export class NodesInfo {
     this.elevations = []
     this.distances = []
     this.speed = []
+    this.slopes = []
     this.tolerance = 60
     this.selectedLayerId = undefined
 
@@ -318,11 +319,14 @@ export class NodesInfo {
     // Four dimensions means x, y, t, e Elevation is in fourth place
 
     if (coordsList[0].length >= 3) {
-      // Index of elevation values
-      let pos = 2
-      var eleFrozen = coordsList[0]
-      var maxEle = coordsList[0][pos]
-      var minEle =  coordsList[0][pos]
+      // Index of elevation values, and dist values
+      let elePos = 2, posSlope = 4
+      var eleGained = coordsList[0]
+      var maxEle = coordsList[0][elePos]
+      var minEle =  coordsList[0][elePos]
+      var maxSlope = 0
+      var minSlope = 0
+
       for (var index = 1; index <= coordsList.length - 1; index++) {
         const cur = coordsList[index]
         const prev = coordsList[index - 1]
@@ -333,41 +337,53 @@ export class NodesInfo {
         }
         if (elapsed >= tolerance) {
           elapsed = 0
-          if (cur[pos] > maxEle) {
-            maxEle = Math.floor(cur[pos])
+          // Elevations MIN/MAX
+          if (cur[elePos] > maxEle) {
+            maxEle = Math.floor(cur[elePos])
           }
-          if (cur[pos] < minEle) {
-            minEle = Math.floor(cur[pos])
+          if (cur[elePos] < minEle) {
+            minEle = Math.floor(cur[elePos])
           }
-          if ( eleFrozen[pos] < cur[pos]) {
-            up += Math.floor(cur[pos]) - Math.floor(eleFrozen[pos])
+          // ELEVATION GAINED
+          if ( eleGained[elePos] < cur[elePos]) {
+            up += Math.floor(cur[elePos]) - Math.floor(eleGained[elePos])
           } else {
-            down += Math.floor(eleFrozen[pos]) - Math.floor(cur[pos])
+            down += Math.floor(eleGained[elePos]) - Math.floor(cur[elePos])
           }
-          eleFrozen = cur
+          eleGained = cur
+          // SLOPE MIN/MAX
+          if (cur[posSlope] > maxSlope) {
+            maxSlope = Math.floor(cur[posSlope])
+          }
+          if (cur[posSlope] < minSlope) {
+            minSlope = Math.floor(cur[posSlope])
+          }
         }
       }
 
-      response.elevation = { up: up, down: down, maxEle, minEle }
+      response.slopes = { maxSlope, minSlope }
+      response.elevation = { up, down, maxEle, minEle }
     }
     response.type = 'track-info'
 
     let xDataGraph
     let yDataGraph
     let speedData
+    let slopeData
 
     xDataGraph = this.distances.slice(first, last + 1)
     yDataGraph = this.elevations.slice(first, last + 1)
     speedData = this.speed.slice(first, last + 1)
+    slopeData = this.slopes.slice(first, last + 1)
 
     response.distances = xDataGraph
     // Elevations only when this.selectedSegmentLayer  has no coords
     if (this.selectedSegmentLayer.getSource().getFeatures()[0].getGeometry().getCoordinates().length === 0) {
       response.elevations = yDataGraph
     }
-
     response.layerId = this.selectedLayerId
     response.speed = speedData
+    // response.slope = slopeData
     response.indexes = { first, last }
     this.trackInfo = response
     if (this.callback) {
@@ -376,41 +392,63 @@ export class NodesInfo {
     // this.map.dispatchEvent(response)
   }
 
-  getNodesSource(coords) {
+  getNodesSource(coords, layerId) {
     const _this = this
     const nodesSource = new VectorSource({})
+    this.selectedLayerId = layerId
     let dist = 0
+    let prev
     let speed = 0
+    let data = []
+    let ele, slope
+    let incEle = 0, maxSlope = 0, minSlope = 0, maxIndex = 0, minIndex = 0
     coords.forEach((cur, index) => {
+      ele = Math.floor(cur[2])
       if (index === 0) {
         dist = 0
         speed = 0
+        slope = 0
       } else {
-        const prev = coords[index -1]
+        prev = coords[index -1]
         var c1 = transform([cur[0], cur[1]], 'EPSG:3857', 'EPSG:4326')
         var c2 = transform([prev[0], prev[1]], 'EPSG:3857', 'EPSG:4326')
-        var incDist = Math.floor(
+        var incDist = Distance(c1, c2)
           // projDistance([prev[0], prev[1]], [cur[0], cur[1]])
-          Distance(c1, c2)
-        )
+
         var incTime = cur[3] - prev[3]
-        var speed = (incDist / incTime) * 3.6 // kms/h
+        speed = (incDist / incTime) * 3.6 // kms/h
         dist += incDist
+        incEle = cur[2] - prev[2]
+        slope = Math.floor(Math.atan(incEle / incDist) * (180 / Math.PI))
+        if (slope < minSlope) {
+          minSlope = slope
+          minIndex = dist
+        }
+        if (slope > maxSlope) {
+          maxSlope = slope
+          maxIndex = dist
+        }
       }
-      const ele = Math.floor(cur[2])
+  
       var f = new Feature({
-        geometry: new Point([cur[0], cur[1], cur[2], cur[3]]),
+        geometry: new Point([cur[0], cur[1], cur[2], cur[3], slope]),
         id: index,
         d: dist,
         e: ele,
         t: cur[3],
-        s: speed
+        s: speed,
+        sl: slope
       })
-      this.distances.push(dist)
+      data.push([cur[0], cur[1], cur[2], cur[3], dist, ele, cur[3], speed, slope ])
+      this.distances.push(dist + ';' + slope)
       this.elevations.push(ele)
       this.speed.push(speed)
+      // this.slopes.push(slopes)
       nodesSource.addFeature(f)
     })
+    // this.initCoords = data
+    // console.log(maxSlope, maxIndex)
+    // console.log(minSlope, minIndex)
     return nodesSource
   }
 
@@ -421,7 +459,7 @@ export class NodesInfo {
 
   async getInfoFromCoords(coords) {
     this.initCoords = coords
-    this.nodesSource = this.getNodesSource(coords)
+    this.nodesSource = await this.getNodesSource(coords)
     this.startIndex = 0
     this.endIndex = coords.length - 1
     this.sumUp(0, this.initCoords.length - 1)

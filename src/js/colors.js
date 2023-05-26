@@ -26,6 +26,11 @@ const defaultColors = [
   'tomato', 'turquoise', 'violet','wheat', 'white', 'whitesmoke', 'yellow', 'yellowgreen'
 ]
 
+const colorsSubset = [
+  'red', 'blue', 'yellow', 'green', 'orange', 'purple', 'brown', 'pink', 'black', 'gray', 'white'
+]
+
+
 export class Colors {
     /**
      * @param {Object} [opt_options] Control options.
@@ -56,3 +61,5 @@ export class Colors {
     console.log("#" + randomColor)
     return "#" + randomColor;
   }
+
+  export { colorsSubset }

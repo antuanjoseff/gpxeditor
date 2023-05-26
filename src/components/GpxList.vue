@@ -11,87 +11,75 @@
       <template #item="{ element }">
         <div class="drag-item" :class="element.active?'active':''" @click="setActiveLayer(element.id)">
           <q-item tag="div" v-ripple>
-            <q-item-section side top>
-              <div>
-                <q-icon
-                  v-if="element.visible==true"
-                  class="toc-layer-icon"
-                  name="visibility"
-                  @click.stop.prevent="toggleVisibility(element, element.id)"
-                />
-                <q-icon
-                  v-else
-                  class="toc-layer-icon"
-                  name="visibility_off"
-                  @click.stop.prevent="toggleVisibility(element, element.id)"
-                />
-                <div @click.stop>
+            <div class="flex fit col items-center">
+              <div class="flex fit q-mb-sm">
+                <div style="flex-grow:1">
+                  <q-item-label
+                    caption
+                    class="zoom-in"
+                    @doubleclick.prevent="setActiveLayer(element.id)"
+                    @click.stop="zoomToLayer(element.id)"
+                  >
+                    {{ element.label }} - {{ element.id }}
+                  </q-item-label>
+                </div>
+   
+              </div>
+
+              <div class="fit flex layer-tools">
                   <div>
+                    <q-icon
+                      v-if="element.visible==true" class="toc-layer-icon"
+                      name="visibility" @click.stop.prevent="toggleVisibility(element, element.id)"
+                    />
+                    <q-icon v-else class="toc-layer-icon"
+                      name="visibility_off" @click.stop.prevent="toggleVisibility(element, element.id)"
+                    />
+                  </div>
+                  <div @click.stop>
                     <input
                       :id="'color-picker_' + element.id"
                       type="color"
                       value="element.color"
                       @input="changeColor($event, element.id)" hidden
                     />
+                    <label :for="'color-picker_' + element.id">
+                      <q-icon class="toc-layer-icon palette q-mr-sm" name="square"
+                        :style="{color:element.color,background:element.color}" />
+                    </label>
                   </div>
-                  <label :for="'color-picker_' + element.id">
+
+                  <div>
                     <q-icon
-                      class="toc-layer-icon palette q-mr-sm"
-                      :style="{color:element.color,background:element.color}"
-                      name="square"/>
-                  </label>
-                </div>
+                      name="terrain" square color="brown"
+                      size="2em" class="track-download"
+                      @click="showTrackProfile(element.id)"
+                    />
+                  </div>
+                  <div>
+                      <q-icon
+                        class="toc-layer-icon right"
+                        name="settings"
+                      />
+                      <!-- <q-slider v-if="slider"
+                        label
+                        v-model="sliderValue" :min="0" :max="300"
+                        @update:model-value="updateTolerance"
+                        /> -->
+                  </div>
+                  <div>
+                    <q-icon color="grey-14" name="file_download"
+                      square size="2em" class="track-download"
+                      @click.stop.prevent="downloadTrack(element.id)"
+                    />
+                  </div>
               </div>
-            </q-item-section>
-
-            <!-- <q-item-section side top>
-            </q-item-section> -->
-
-            <q-item-section style="flex-grow: 5;">
-              <div>
-                <q-item-label
-                  caption
-                  class="zoom-in"
-                  @doubleclick.prevent="setActiveLayer(element.id)"
-                  @click.stop="zoomToLayer(element.id)"
-                >
-                  {{ element.label }} - {{ element.id }}
-                </q-item-label>
-              </div>
-            </q-item-section>
-            <q-item-section style="flex-grow: 1;">
-              <diV>
-                <q-icon
-                  name="terrain"
-                  square
-                  color="brown"
-                  size="2em"
-                  class="track-download"
-                  @click="showTrackProfile(element.id)"
-                >
-                </q-icon>
-                <q-icon
-                  color="grey-14"
-                  name="file_download"
-                  square
-                  size="2em"
-                  class="track-download"
-                  @click.stop.prevent="downloadTrack(element.id)"
-                >
-                </q-icon>
-              </diV>
-            </q-item-section>
-
-            <q-item-section style="flex-grow: 1;" class="cursor-drag">
-              <div class="cursor-drag">
-                <q-icon
-                  class="toc-layer-icon cursor-drag handle"
-                  name="more_vert"
-                  @mouseover="draggable=true"
-                  @mouseleave="draggable=false"
-                ></q-icon>
-              </div>
-            </q-item-section>
+            </div>
+            <div class="cursor-drag flex items-center">
+              <q-icon class="toc-layer-icon cursor-drag handle" name="more_vert"
+                @mouseover="draggable=true" @mouseleave="draggable=false"
+              />
+            </div>
         </q-item>
         </div>
       </template>
@@ -290,6 +278,9 @@ label.active{
 
 .zoom-in{
   cursor: zoom-in;
+  font-weight:600;
+  font-size: 1.1em;
+  font-color: black;
 }
 .track-download{
   cursor: pointer;
@@ -302,5 +293,8 @@ label.active{
 }
 .no-events{
   pointer-events: none;
+}
+.layer-tools div{
+  flex-grow: 1;
 }
 </style>

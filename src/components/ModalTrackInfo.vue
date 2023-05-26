@@ -81,7 +81,7 @@
                 </div>
                 </div>
                 <!-- CANCEL / CREATE TRACK BUTTONS -->
-                <div style="flex-grow: 1;" class="text-right">
+                <div style="flex-grow: 1;" class="text-right self-center">
                   <q-btn
                     v-if="activeTool=='info'"
                     color="white"
