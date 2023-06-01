@@ -1,5 +1,6 @@
 <template>
   <div class="fit padding-canvas" v-if="elevationData">
+    <div id="slope-box"></div>
     <canvas id="overlay" height="250" style="position:absolute;pointer-events:none;"></canvas>
     <line-chart
       ref="CHART"
@@ -280,10 +281,18 @@ export default defineComponent({
     const tooltipLine = {
       id: 'tooltipLine',
       afterDraw: chart => {
+        const box = document.getElementById('slope-box')
         if (chart.tooltip._active && chart.tooltip._active.length) {
           const ctx = chart.ctx
           ctx.save()
           const activePoint = chart.tooltip._active[0]
+          // ctx.font = "30px Arial";
+          const idx = activePoint.index
+          const label = chart.config._config.data.labels[idx].split(';')[1]
+          box.style.marginLeft = (activePoint.element.x + 10) +'px'
+          box.style.marginTop = (activePoint.element.y - 10) +'px'
+          box.innerHTML = label +'%'
+
           ctx.beginPath()
           ctx.setLineDash([5, 7])
           ctx.moveTo(activePoint.element.x, 0)
@@ -310,7 +319,9 @@ export default defineComponent({
         return
       }
 
-      const total  = parseInt(eleData.label)
+      const total  = parseInt(eleData.label.split(';')[0])
+      const slope  = parseInt(eleData.label.split(';')[1])
+
       const speedFormatted = speedData.formattedValue + ' kms/h'
       const kms = Math.floor(total /  1000)
       const meters = Math.floor(total - (1000 * kms))
@@ -351,5 +362,13 @@ export default defineComponent({
 <style scoped>
 .padding-canvas{
   padding-top: 0px;
+}
+#slope-box{
+  position:absolute;
+  border-radius:4px;
+  z-index: 10;
+  padding:5px;
+  background-color: white;
+  color: 'black'
 }
 </style>

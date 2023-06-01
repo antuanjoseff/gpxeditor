@@ -565,6 +565,7 @@ export default {
     }
 
     const updateGraphData = function (payload) {
+      console.log(payload)
       const data = {
         distance: payload.distance,
         time: payload.time,
